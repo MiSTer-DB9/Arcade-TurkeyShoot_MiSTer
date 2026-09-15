@@ -204,7 +204,7 @@ assign LED_USER  = 0;
 // [MiSTer-DB9 BEGIN] - DB9/SNAC8 support: joydb wrapper
 wire         CLK_JOY = CLK_50M;                 // Assign clock between 40-50Mhz
 wire   [1:0] joy_type_raw    = status[127:126]; // 0=Off, 1=Saturn, 2=DB9MD, 3=DB15
-wire         joy_2p          = status[125];
+wire         joy_2p          = 1'b0;          // 1P-only: joy_2p unused
 // SNAC cores: replace 1'b0 with the core's SNAC enable expression so SNAC
 // preempts the joydb wrapper on shared USER_IO pins. Default 1'b0 is no-op.
 wire         snac_active     = 1'b0;
@@ -241,6 +241,13 @@ wire         db9_remap_cmd;
 wire   [5:0] db9_remap_byte_cnt;
 wire  [15:0] db9_remap_din;
 // [MiSTer-DB9 END]
+// [MiSTer-DB9 BEGIN] - DB9 remap factory default (used until Main_MiSTer streams UIO 0xFD)
+// Derived from CONF_STR J1, same rule as db9_map.cpp; lets the core work on a stock MiSTer binary.
+// DB15:  Fire=A, Grenade=B, Gobble=C, Start 1P=START, Start 2P=D, Coin=SELECT
+// DB9MD: Fire=A, Grenade=B, Gobble=C, Start 1P=START, Start 2P=X, Coin=MODE
+wire  [35:0] db9_remap_default_db15  = 36'hFFFB7A654;
+wire  [35:0] db9_remap_default_db9md = 36'hFFFB7A654;
+// [MiSTer-DB9 END]
 joydb joydb (
   .clk             ( CLK_JOY         ),
   .clk_sys         ( clk_sys            ),
@@ -261,6 +268,8 @@ joydb joydb (
   .remap_cmd       ( db9_remap_cmd      ),
   .remap_byte_cnt  ( db9_remap_byte_cnt ),
   .remap_din       ( db9_remap_din      ),
+  .remap_default_db15  ( db9_remap_default_db15  ),
+  .remap_default_db9md ( db9_remap_default_db9md ),
   .joydb_1_mapped  ( joydb_1_mapped     ),
   .joydb_2_mapped  ( joydb_2_mapped     ),
   .joy_raw         ( joy_raw_payload )
